@@ -1,0 +1,2 @@
+# This file ensures the uploaded_pdfs directory is included in Git
+# while ignoring its contents 

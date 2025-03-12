@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Learning Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#09090b',
+                        darker: '#030303',
+                        darkest: '#000000',
+                        accent: '#6e56cf',
+                        success: '#30a46c',
+                        warning: '#f5a524',
+                        danger: '#e5484d',
+                        'dark-card': '#18181b'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        :root {
+            --font-sans: 'Inter', sans-serif;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            background-color: #000000;
+            color: #ffffff;
+        }
+        
+        .card {
+            background-color: #18181b;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            border: 1px solid #27272a;
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #27272a;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            padding: 0.625rem 1.25rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: #6e56cf;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #5b46c0;
+        }
+        
+        .btn-secondary {
+            background-color: #27272a;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #3f3f46;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3f3f46;
+            color: #ffffff;
+        }
+        
+        .btn-outline:hover {
+            background-color: #27272a;
+        }
+        
+        .input-file {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px dashed #3f3f46;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            background-color: #09090b;
+            color: #ffffff;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-easy {
+            background-color: rgba(48, 164, 108, 0.2);
+            color: #30a46c;
+        }
+        
+        .badge-medium {
+            background-color: rgba(245, 165, 36, 0.2);
+            color: #f5a524;
+        }
+        
+        .badge-hard {
+            background-color: rgba(229, 72, 77, 0.2);
+            color: #e5484d;
+        }
+        
+        .quiz-question {
+            border-left: 3px solid #6e56cf;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            background-color: #09090b;
+            border-radius: 0.5rem;
+        }
+        
+        .mcq-option {
+            display: block;
+            padding: 0.75rem 1rem;
+            margin: 0.75rem 0;
+            border: 1px solid #27272a;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #18181b;
+        }
+        
+        .mcq-option:hover {
+            background-color: #27272a;
+        }
+        
+        .mcq-option.selected {
+            background-color: #6e56cf;
+            color: white;
+            border-color: #6e56cf;
+        }
+        
+        .mcq-option.correct {
+            background-color: rgba(48, 164, 108, 0.2);
+            color: #30a46c;
+            border-color: #30a46c;
+        }
+        
+        .mcq-option.incorrect {
+            background-color: rgba(229, 72, 77, 0.2);
+            color: #e5484d;
+            border-color: #e5484d;
+        }
+        
+        .feedback {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        
+        .feedback.correct {
+            background-color: rgba(48, 164, 108, 0.2);
+            color: #30a46c;
+            display: block;
+        }
+        
+        .feedback.incorrect {
+            background-color: rgba(229, 72, 77, 0.2);
+            color: #e5484d;
+            display: block;
+        }
+        
+        .explanation {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: #09090b;
+            border-left: 3px solid #52525b;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        
+        .explanation.visible {
+            display: block;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Chart-like elements */
+        .mini-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 40px;
+            margin: 1rem 0;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background-color: #6e56cf;
+            margin: 0 2px;
+            border-radius: 3px 3px 0 0;
+            min-height: 4px;
+        }
+        
+        /* Calendar-like elements */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            background-color: #18181b;
+        }
+        
+        .calendar-day.active {
+            background-color: #6e56cf;
+            color: white;
+        }
+        
+        .calendar-day.today {
+            border: 2px solid #6e56cf;
+        }
+        
+        /* Progress indicators */
+        .progress-container {
+            height: 0.5rem;
+            background-color: #18181b;
+            border-radius: 9999px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #6e56cf;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold tracking-tight">PDF Learning Assistant</h1>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Upload Section -->
+            <div class="card md:col-span-1" id="uploadForm">
+                <div class="card-header">
+                    <h2 class="text-xl font-semibold">Upload PDF</h2>
+                </div>
+                <div class="card-body">
+                    <input type="file" id="pdfFile" accept=".pdf" class="input-file" />
+                    <button onclick="uploadPDF()" class="btn btn-primary w-full">Upload</button>
+                    
+                    <!-- Visual element: mini chart -->
+                    <div class="mini-chart mt-6">
+                        <div class="chart-bar" style="height: 40%;"></div>
+                        <div class="chart-bar" style="height: 60%;"></div>
+                        <div class="chart-bar" style="height: 30%;"></div>
+                        <div class="chart-bar" style="height: 80%;"></div>
+                        <div class="chart-bar" style="height: 50%;"></div>
+                        <div class="chart-bar" style="height: 70%;"></div>
+                        <div class="chart-bar" style="height: 45%;"></div>
+                    </div>
+                    <div class="text-xs text-slate-400 text-center mt-2">PDF Processing Statistics</div>
+                </div>
+            </div>
+            
+            <!-- Processing Section -->
+            <div class="md:col-span-2" id="processingSection">
+                <div class="card mb-6">
+                    <div class="card-header">
+                        <h2 class="text-xl font-semibold">Process PDF</h2>
+                    </div>
+                    <div class="card-body">
+                        <button onclick="processPDF()" class="btn btn-primary w-full">Extract and Summarize</button>
+                        
+                        <!-- Progress indicator -->
+                        <div class="progress-container mt-6">
+                            <div class="progress-bar" style="width: 0%" id="processProgress"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span>Extraction</span>
+                            <span>Summarization</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="summaryResult" class="card hidden">
+                    <div class="card-header">
+                        <h2 class="text-xl font-semibold">Summary</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="bg-dark p-4 rounded-md mb-4">
+                            <p id="summaryText" class="text-slate-300 leading-relaxed"></p>
+                        </div>
+                        <button onclick="generateQuiz()" class="btn btn-primary w-full">Generate Quiz</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quiz Section -->
+            <div class="md:col-span-3" id="quizSection">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="text-xl font-semibold">Knowledge Quiz</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="difficultySelector" class="mb-6">
+                            <h3 class="text-sm font-medium text-slate-400 mb-3">Select Difficulty Level</h3>
+                            <div class="flex space-x-3">
+                                <button class="btn btn-outline flex-1" onclick="selectDifficulty('easy')">
+                                    <span class="w-3 h-3 rounded-full bg-success mr-2"></span>
+                                    Easy
+                                </button>
+                                <button class="btn btn-outline flex-1" onclick="selectDifficulty('medium')">
+                                    <span class="w-3 h-3 rounded-full bg-warning mr-2"></span>
+                                    Medium
+                                </button>
+                                <button class="btn btn-outline flex-1" onclick="selectDifficulty('hard')">
+                                    <span class="w-3 h-3 rounded-full bg-danger mr-2"></span>
+                                    Hard
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="quizContent"></div>
+                        
+                        <div id="retakeQuizButtonContainer" class="hidden mt-6">
+                            <button onclick="retakeQuiz()" class="btn btn-primary w-full">Retake Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPdfId = null;
+        let selectedDifficulty = 'medium'; // Default difficulty
+
+        // Hide sections initially
+        document.getElementById('processingSection').classList.add('hidden');
+        document.getElementById('quizSection').classList.add('hidden');
+
+        async function uploadPDF() {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a PDF file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload-pdf/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentPdfId = data.pdf_id;
+                    document.getElementById('processingSection').classList.remove('hidden');
+                    
+                    // Animate progress bar for visual feedback
+                    const progressBar = document.getElementById('processProgress');
+                    progressBar.style.width = '100%';
+                    progressBar.style.transition = 'width 0.8s ease-in-out';
+                    
+                    // Show success message instead of alert
+                    const uploadBtn = document.querySelector('#uploadForm button');
+                    uploadBtn.innerHTML = '<span class="mr-2">✓</span> PDF Uploaded';
+                    uploadBtn.classList.remove('btn-primary');
+                    uploadBtn.classList.add('btn-secondary');
+                    
+                    setTimeout(() => {
+                        progressBar.style.width = '0%';
+                        progressBar.style.transition = 'none';
+                    }, 1000);
+                } else {
+                    alert('Upload failed: ' + data.detail);
+                }
+            } catch (error) {
+                alert('Error uploading file: ' + error);
+            }
+        }
+
+        async function processPDF() {
+            if (!currentPdfId) {
+                alert('Please upload a PDF first');
+                return;
+            }
+
+            // Show processing animation
+            const progressBar = document.getElementById('processProgress');
+            progressBar.style.width = '0%';
+            progressBar.style.transition = 'width 2s ease-in-out';
+            
+            setTimeout(() => {
+                progressBar.style.width = '50%';
+            }, 100);
+
+            try {
+                const response = await fetch(`/process/${currentPdfId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Complete the progress bar
+                    progressBar.style.width = '100%';
+                    
+                    setTimeout(() => {
+                        const summaryResult = document.getElementById('summaryResult');
+                        const summaryText = document.getElementById('summaryText');
+                        summaryText.textContent = data.summary;
+                        summaryResult.classList.remove('hidden');
+                        
+                        // Update process button
+                        const processBtn = document.querySelector('#processingSection .card:first-child button');
+                        processBtn.innerHTML = '<span class="mr-2">✓</span> Processing Complete';
+                        processBtn.classList.remove('btn-primary');
+                        processBtn.classList.add('btn-secondary');
+                    }, 500);
+                } else {
+                    progressBar.style.width = '0%';
+                    alert('Processing failed: ' + data.detail);
+                }
+            } catch (error) {
+                progressBar.style.width = '0%';
+                alert('Error processing PDF: ' + error);
+            }
+        }
+
+        function selectDifficulty(difficulty) {
+            selectedDifficulty = difficulty;
+            
+            // Update button styles
+            document.querySelectorAll('#difficultySelector button').forEach(btn => {
+                btn.className = 'btn btn-outline flex-1';
+            });
+            
+            // Add selected class to the clicked button
+            const selectedBtn = document.querySelector(`#difficultySelector button[onclick="selectDifficulty('${difficulty}')"]`);
+            selectedBtn.className = 'btn btn-primary flex-1';
+            
+            // If we already have a quiz, regenerate it with the new difficulty
+            if (currentPdfId && document.getElementById('quizContent').innerHTML !== '') {
+                generateQuiz();
+            }
+        }
+
+        async function generateQuiz() {
+            if (!currentPdfId) {
+                alert('Please upload and process a PDF first');
+                return;
+            }
+            
+            const difficulty = selectedDifficulty || 'medium';
+            const quizSection = document.getElementById('quizSection');
+            const difficultySelector = document.getElementById('difficultySelector');
+            const quizContent = document.getElementById('quizContent');
+            const retakeQuizButtonContainer = document.getElementById('retakeQuizButtonContainer');
+            
+            quizSection.classList.remove('hidden');
+            // Don't hide the difficulty selector until we know the quiz generation was successful
+            quizContent.innerHTML = '<div class="p-6 text-center"><div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent mb-2"></div><div class="text-slate-400">Generating quiz questions...</div></div>';
+            
+            try {
+                const response = await fetch(`/generate-quiz/${currentPdfId}?num_questions=10&difficulty=${difficulty}`);
+                const data = await response.json();
+                
+                if (response.ok && data.questions && data.questions.length > 0) {
+                    // Only hide difficulty selector if quiz generation was successful
+                    difficultySelector.classList.add('hidden');
+                    
+                    const questionsHtml = data.questions.map((q, index) => `
+                        <div class="quiz-question" data-question-index="${index}" data-correct-answer="${q.correct_answer}">
+                            <div class="flex items-center mb-3">
+                                <span class="badge badge-${difficulty} mr-2">${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</span>
+                                <h3 class="font-medium">
+                                    ${q.number || index + 1}. ${q.question}
+                                </h3>
+                            </div>
+                            ${q.options.map((option, optIndex) => `
+                                <div class="mcq-option" onclick="selectOption(${index}, ${optIndex})">
+                                    ${['A', 'B', 'C', 'D'][optIndex]}) ${option}
+                                </div>
+                            `).join('')}
+                            <div class="feedback"></div>
+                            <div class="explanation" id="explanation-${index}">
+                                <div class="font-medium mb-1">Explanation:</div>
+                                <div>${q.explanation || 'This is based on the text content.'}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    quizContent.innerHTML = questionsHtml;
+                    retakeQuizButtonContainer.classList.add('hidden');
+                } else {
+                    quizContent.innerHTML = '<div class="p-4 bg-danger bg-opacity-20 text-danger rounded-md">Failed to generate quiz questions. Please try again.</div>';
+                }
+            } catch (error) {
+                quizContent.innerHTML = `<div class="p-4 bg-danger bg-opacity-20 text-danger rounded-md">Error generating quiz: ${error}</div>`;
+            }
+        }
+
+        function selectOption(questionIndex, optionIndex) {
+            const questionDiv = document.querySelector(`[data-question-index="${questionIndex}"]`);
+            const correctAnswer = parseInt(questionDiv.dataset.correctAnswer);
+            const options = questionDiv.querySelectorAll('.mcq-option');
+            const feedback = questionDiv.querySelector('.feedback');
+            const explanation = document.getElementById(`explanation-${questionIndex}`);
+            
+            // Remove previous selections and feedback
+            options.forEach(opt => opt.className = 'mcq-option');
+            
+            // Show the selected option and correct/incorrect feedback
+            options[optionIndex].className = 'mcq-option selected';
+            options[correctAnswer].className = 'mcq-option correct';
+            
+            if (optionIndex === correctAnswer) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = 'Correct! Well done!';
+            } else {
+                options[optionIndex].className = 'mcq-option incorrect';
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `Incorrect. The correct answer is ${['A', 'B', 'C', 'D'][correctAnswer]}.`;
+            }
+            
+            // Show the explanation
+            if (explanation) {
+                explanation.className = 'explanation visible';
+            }
+            
+            // Show the retake quiz button after answering at least one question
+            document.getElementById('retakeQuizButtonContainer').classList.remove('hidden');
+        }
+
+        function retakeQuiz() {
+            // Reset the quiz section
+            const difficultySelector = document.getElementById('difficultySelector');
+            const quizContent = document.getElementById('quizContent');
+            const retakeQuizButtonContainer = document.getElementById('retakeQuizButtonContainer');
+            
+            // Show difficulty selector again
+            difficultySelector.classList.remove('hidden');
+            
+            // Clear quiz content
+            quizContent.innerHTML = '';
+            
+            // Hide retake button
+            retakeQuizButtonContainer.classList.add('hidden');
+            
+            // Reset difficulty buttons to default state
+            selectDifficulty(selectedDifficulty || 'medium');
+        }
+    </script>
+</body>
+</html> 
